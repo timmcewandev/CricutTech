@@ -8,29 +8,35 @@
 import XCTest
 @testable import CricutTech
 
-final class CricutTechTests: XCTestCase {
-
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+struct NetworkMock: HTTP {
+    var isLoading = false
+    
+    var shapes: [Shapes] = []
+    
+    func getShape() async throws -> [CricutTech.Shapes] {
+        if isLoading {
+            shapes
+        } else {
+            throw NetworkError.invalidDecode
         }
+    }
+    
+}
+
+final class CricutTechTests: XCTestCase {
+    
+    @MainActor func testPerformanceExample() throws {
+        let mock = NetworkMock()
+        let viewModel = ViewModel(networkManager: mock)
+        
+        let circle = Shapes(name: "Circle", drawPath: "circle")
+        let square = Shapes(name: "Square", drawPath: "square")
+        
+        viewModel.shape.append(circle)
+        viewModel.shape.append(square)
+        
+        XCTAssertEqual(viewModel.shape.count, 2)
+        XCTAssertEqual(viewModel.shape[0].name, "Circle")
     }
 
 }
